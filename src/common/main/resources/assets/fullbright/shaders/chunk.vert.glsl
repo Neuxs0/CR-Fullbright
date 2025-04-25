@@ -18,7 +18,7 @@ void main()
     worldPos = GET_BLOCK_VERT_POSITION + u_batchPosition;
     vec3 trueWorldPos = worldPos + cameraPosition;
 
-    blocklight = vec4(1.0);
+    blocklight = a_lighting;
 
     v_texCoord0 = GET_TEX_COORDS;
     faceNormal = GET_FACE_NORMAL;

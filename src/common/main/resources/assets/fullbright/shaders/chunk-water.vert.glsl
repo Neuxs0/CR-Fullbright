@@ -28,7 +28,7 @@ void main()
         trueWorldPos = vec3(0.0);
     }
 
-    blocklight = vec4(1.0);
+    blocklight = a_lighting;
 
     v_texCoord0 = GET_TEX_COORDS;
 
@@ -45,17 +45,12 @@ void main()
     float waveSpeed = 0.25;
     float waveTime = waveSpeed * u_time;
     float scale = 5.0;
-    float wavePositionA = 10.0 * (cos(trueWorldPos.x * scale) +
-    sin(trueWorldPos.z * scale));
-    float wavePositionB = 10.0 * (sin(trueWorldPos.x * scale) +
-    cos(trueWorldPos.z * scale));
+    float wavePositionA = 10.0 * (cos(trueWorldPos.x * scale) + sin(trueWorldPos.z * scale));
+    float wavePositionB = 10.0 * (sin(trueWorldPos.x * scale) + cos(trueWorldPos.z * scale));
 
-    waveStrength = 0.1 * (sin(waveTime + wavePositionA) *
-    cos(waveTime + wavePositionB));
+    waveStrength = 0.1 * (sin(waveTime + wavePositionA) * cos(waveTime + wavePositionB));
 
-    vec4 modelPosition = u_modelMat * vec4(worldPos.x + xOff,
-    worldPos.y + waveStrength - 0.2,
-    worldPos.z + zOff, 1.0);
+    vec4 modelPosition = u_modelMat * vec4(worldPos.x + xOff, worldPos.y + waveStrength - 0.2, worldPos.z + zOff, 1.0);
     gl_Position = u_projViewTrans * modelPosition;
 
     modelPosition = u_modelMat * vec4(cameraPosition, 1.0);
