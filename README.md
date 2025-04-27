@@ -7,7 +7,7 @@ Removes darkness and fog to let you see anywhere
 
 ## How to use
 - Run the mod as any other Quilt/Puzzle mod
-- Press `f` to toggle fullbright (Configurable in Options -> Keybinds)
+- Press `f` to toggle fullbright (Configurable in `/your-cosmic-reach-folder/config/fullbright.json`)
 
 ## How to build
 Requirements:
