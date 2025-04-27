@@ -5,13 +5,11 @@ precision mediump float;
 
 uniform float u_time;
 uniform vec3 cameraPosition;
-uniform vec3 skyAmbientColor;
+
 uniform vec3 skyColor;
 uniform vec4 tintColor;
 uniform vec3 worldAmbientColor;
-uniform vec3 u_sunDirection;
 
-#import "base:shaders/common/renderDistance.glsl"
 
 in vec2 v_texCoord0;
 in vec4 blocklight;
@@ -52,9 +50,17 @@ void main()
     fresnel = pow(fresnel, 0.35);
     waterColor = mix(waterColor * 0.5, waterColor, 0.5 + 0.5 * waveStrength * (1.0 - fresnel));
     waterColor = mix(waterColor * 0.75, waterColor, fresnel);
-    waterColor = mix(waterColor, skyColor, blocklight.a * (1.0 - fresnel));
 
-    vec3 lightTint = max(blocklight.rgb, blocklight.a * skyAmbientColor);
+
+
+    vec3 block_ao_factor = blocklight.rgb / 15.0;
+
+
+    vec3 sky_ao_factor = vec3(blocklight.a);
+
+
+    vec3 lightFactor = max(block_ao_factor, sky_ao_factor);
+
     float alpha = mix(texColor.a * 2.0, texColor.a * 0.5, fresnel);
 
     if(alpha == 0.0)
@@ -62,11 +68,16 @@ void main()
         discard;
     }
 
-    outColor = vec4(waterColor * lightTint, alpha);
-    outColor.rgb = mix(outColor.rgb, skyColor, blocklight.a * (1.0 - fresnel));
-    outColor *= tintColor;
-    outColor.rgb = max(outColor.rgb, texColor.rgb);
 
-    float gamma = 1.0;
+    outColor = vec4(waterColor * lightFactor, alpha);
+
+
+    outColor *= tintColor;
+
+
+    outColor.rgb = max(outColor.rgb, texColor.rgb * worldAmbientColor);
+
+
+    float gamma = 1.1;
     outColor.rgb = pow(outColor.rgb, vec3(1.0 / gamma));
 }
