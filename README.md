@@ -3,7 +3,7 @@ Removes darkness and fog to let you see anywhere
 
 ## Dependencies:
 - Puzzle Loader any version or Cosmic Quilt any version
-- Cosmic Reach v0.4.0 or newer
+- Cosmic Reach v0.3.2 or newer
 
 ## How to use
 - Run the mod as any other Quilt/Puzzle mod
