@@ -32,7 +32,7 @@ public class Mod {
 
     public static void render() {
         if (Gdx.input.isKeyJustPressed(SettingsManager.getKeybind())
-                || (!isFullbrightEnabled && SettingsManager.isEnabled())) toggleFullbright();
+                || (isFullbrightEnabled != SettingsManager.isEnabled())) toggleFullbright();
     }
 
     public static void toggleFullbright() {
@@ -59,6 +59,7 @@ public class Mod {
             ChunkShader.DEFAULT_BLOCK_SHADER = customChunkShader;
             ChunkShader.WATER_BLOCK_SHADER = customWaterShader;
             reloadChunks();
+            SettingsManager.setEnabled(true);
         } catch (Exception e) {
             LOGGER.error("Something went wrong enabling Fullbright: {}", e.getMessage(), e);
             isFullbrightEnabled = false;
@@ -69,6 +70,7 @@ public class Mod {
         try {
             ChunkShader.initChunkShaders();
             reloadChunks();
+            SettingsManager.setEnabled(false);
         } catch (Exception e) {
             LOGGER.error("Something went wrong disabling Fullbright: {}", e.getMessage(), e);
         }

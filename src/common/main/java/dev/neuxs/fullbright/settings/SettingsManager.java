@@ -15,7 +15,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-@SuppressWarnings("unused")
 public class SettingsManager {
     private static final String CONFIG_DIR_NAME = "config";
     private static final String CONFIG_FILE_NAME = String.join("", Mod.MOD_ID, ".json");
@@ -23,13 +22,10 @@ public class SettingsManager {
     private static final Path CONFIG_DIRECTORY_PATH = Paths.get(CONFIG_DIR_NAME);
     private static final Path CONFIG_FILE_PATH = CONFIG_DIRECTORY_PATH.resolve(CONFIG_FILE_NAME);
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-
-    private static final long FILE_READ_DELAY_MS = 150;
-    private static final long RELOAD_DEBOUNCE_MS = 500;
-
+    private static final long FILE_READ_DELAY_MS = 1000;
+    private static final long RELOAD_DEBOUNCE_MS = 1000;
     private static final SettingsManager instance = new SettingsManager();
     private volatile FullbrightConfig currentConfig;
-
     private WatchService watchService = null;
     private final AtomicBoolean watcherRunning = new AtomicBoolean(false);
     private volatile long lastReloadAttemptTime = 0;
@@ -73,9 +69,7 @@ public class SettingsManager {
                 } catch (Exception e) {
                     Mod.LOGGER.error("Unexpected error reading/parsing {}: {}. Using default settings.", targetPath, e.getMessage(), e);
                 }
-            } else {
-                needsSave = true;
-            }
+            } else needsSave = true;
 
         } catch (IOException e) {
             Mod.LOGGER.error("Fatal: Failed to create config directory {}: {}. Using in-memory default settings.", CONFIG_DIRECTORY_PATH, e.getMessage(), e);
@@ -92,9 +86,7 @@ public class SettingsManager {
             needsSave = true;
         }
 
-        if (needsSave) {
-            saveConfigToFile(loadedConfig);
-        }
+        if (needsSave) saveConfigToFile(loadedConfig);
 
         return loadedConfig;
     }
@@ -124,7 +116,6 @@ public class SettingsManager {
     }
 
     private FullbrightConfig createDefaultConfig() {
-        Mod.LOGGER.info("Creating default Fullbright configuration.");
         return new FullbrightConfig();
     }
 
@@ -155,9 +146,7 @@ public class SettingsManager {
             Mod.LOGGER.error("setKeybind called but currentConfig is NULL! Cannot set keybind.");
             return;
         }
-        if (manager.currentConfig.setKeybind(keybind)) {
-            saveSettings();
-        }
+        if (manager.currentConfig.setKeybind(keybind)) saveSettings();
     }
 
     public static boolean isEnabled() {
@@ -175,9 +164,7 @@ public class SettingsManager {
             Mod.LOGGER.error("setEnabled called but currentConfig is NULL! Cannot set enabled state.");
             return;
         }
-        if (manager.currentConfig.setEnabled(enabled)) {
-            saveSettings();
-        }
+        if (manager.currentConfig.setEnabled(enabled)) saveSettings();
     }
 
     public static void saveSettings() {
@@ -186,11 +173,8 @@ public class SettingsManager {
 
     private synchronized void performReload() {
         long now = System.currentTimeMillis();
-        if ((now - lastReloadAttemptTime < RELOAD_DEBOUNCE_MS)) {
-            return;
-        }
+        if ((now - lastReloadAttemptTime < RELOAD_DEBOUNCE_MS)) return;
         lastReloadAttemptTime = now;
-        Mod.LOGGER.info("Reloading fullbright configuration from file...");
         this.currentConfig = loadConfigInternal();
     }
 
@@ -205,9 +189,7 @@ public class SettingsManager {
             return;
         }
 
-        if (!watcherRunning.compareAndSet(false, true)) {
-            return;
-        }
+        if (!watcherRunning.compareAndSet(false, true)) return;
 
         try {
             watchService = FileSystems.getDefault().newWatchService();
@@ -221,8 +203,6 @@ public class SettingsManager {
             });
 
             watchExecutor.submit(this::watchLoop);
-            Mod.LOGGER.info("Started configuration file watcher for directory: {}", CONFIG_DIRECTORY_PATH);
-
         } catch (IOException e) {
             Mod.LOGGER.error("Failed to initialize configuration file watcher for {}: {}", CONFIG_DIRECTORY_PATH, e.getMessage(), e);
             watcherRunning.set(false);
@@ -283,29 +263,22 @@ public class SettingsManager {
                 }
             }
 
-            if (relevantChange) {
-                performReload();
-            }
+            if (relevantChange) performReload();
 
             boolean valid = key.reset();
             if (!valid) {
-                Mod.LOGGER.warn("Config watch key became invalid (directory likely inaccessible?). Stopping watcher.");
+                Mod.LOGGER.warn("Config watch key became invalid, stopping watcher.");
                 watcherRunning.set(false);
             }
         }
         closeWatchService();
-        Mod.LOGGER.info("Fullbright config watcher stopped.");
     }
 
     private void closeWatchService() {
         if (watchService != null) {
-            try {
-                watchService.close();
-            } catch (IOException e) {
-                Mod.LOGGER.error("Error closing watch service: {}", e.getMessage(), e);
-            } finally {
-                watchService = null;
-            }
+            try { watchService.close(); }
+            catch (IOException e) { Mod.LOGGER.error("Error closing watch service: {}", e.getMessage(), e); }
+            finally { watchService = null; }
         }
     }
 }
