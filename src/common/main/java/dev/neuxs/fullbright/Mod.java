@@ -3,7 +3,6 @@ package dev.neuxs.fullbright;
 import com.badlogic.gdx.Gdx;
 import dev.neuxs.fullbright.settings.SettingsManager;
 import finalforeach.cosmicreach.GameSingletons;
-import finalforeach.cosmicreach.gamestates.GameState;
 import finalforeach.cosmicreach.gamestates.InGame;
 import finalforeach.cosmicreach.rendering.shaders.ChunkShader;
 import finalforeach.cosmicreach.rendering.shaders.GameShader;
@@ -15,17 +14,18 @@ import finalforeach.cosmicreach.world.Zone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 public class Mod {
     public static final String MOD_ID = "fullbright";
     public static final String MOD_NAME = "Fullbright";
-    public static final String VERSION = "1.0.0";
+    public static final String VERSION = "1.0.1";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
     public static SettingsManager settingsManager;
     public static boolean isFullbrightEnabled = false;
     public static boolean isNoFogEnabled = false;
-
-    private static ChunkShader customChunkShader = null;
-    private static ChunkShader customWaterShader = null;
 
     public static void init() {
         LOGGER.info("{} v{} Initializing...", MOD_NAME, VERSION);
@@ -51,6 +51,9 @@ public class Mod {
 
     public static void enableFullbright() {
         try {
+            ChunkShader customChunkShader;
+            ChunkShader customWaterShader;
+
             if (isNoFogEnabled) {
                 customChunkShader = new ChunkShader(
                         Identifier.of(MOD_ID, "shaders/fullbright-nofog/chunk.vert.glsl"),
@@ -99,21 +102,51 @@ public class Mod {
         World world = InGame.getWorld();
         if (world == null) return;
 
+        Method getChunksMethod;
+        try {
+            getChunksMethod = Region.class.getMethod("getChunks");
+        } catch (NoSuchMethodException e) {
+            LOGGER.error("Reflection failed: Region#getChunks() not found", e);
+            return;
+        }
+
         for (Zone zone : world.getZones()) {
             if (zone == null) continue;
             Region[] regions = zone.getRegions();
             if (regions == null) continue;
             for (Region region : regions) {
                 if (region == null) continue;
-                Chunk[] chunks = region.getChunks().items;
-                if (chunks == null) continue;
-                for (int i = 0; i < region.getChunks().size; i++) {
-                    Chunk chunk = chunks[i];
-                    if (chunk == null) continue;
-                    if (chunk.getMeshGroup() != null) chunk.getMeshGroup().dispose();
-                    chunk.setMeshGroup(null);
-                    if (GameSingletons.zoneRenderer != null) GameSingletons.zoneRenderer.addChunk(chunk);
-                    chunk.flagForRemeshing(false);
+                try {
+                    Object rawChunks = getChunksMethod.invoke(region);
+                    if (rawChunks == null) continue;
+
+                    Chunk[] chunksArray;
+                    int count;
+
+                    if (rawChunks instanceof Chunk[]) {
+                        chunksArray = (Chunk[]) rawChunks;
+                        count = chunksArray.length;
+                    } else {
+                        Class<?> containerClass = rawChunks.getClass();
+                        Field itemsField = containerClass.getField("items");
+                        Field sizeField  = containerClass.getField("size");
+
+                        chunksArray = (Chunk[]) itemsField.get(rawChunks);
+                        count = sizeField.getInt(rawChunks);
+                    }
+
+                    for (int i = 0; i < count; i++) {
+                        Chunk chunk = chunksArray[i];
+                        if (chunk == null) continue;
+
+                        if (chunk.getMeshGroup() != null) chunk.getMeshGroup().dispose();
+                        chunk.setMeshGroup(null);
+
+                        if (GameSingletons.zoneRenderer != null) GameSingletons.zoneRenderer.addChunk(chunk);
+                        chunk.flagForRemeshing(false);
+                    }
+                } catch (IllegalAccessException | InvocationTargetException | NoSuchFieldException e) {
+                    LOGGER.error("Error remeshing region via reflection: {}", e.getMessage(), e);
                 }
             }
         }
