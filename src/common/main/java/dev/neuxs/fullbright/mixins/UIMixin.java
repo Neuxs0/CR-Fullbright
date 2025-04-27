@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(UI.class)
 public class UIMixin {
     @Inject(method = "render", at = @At("TAIL"))
-    public void render(CallbackInfo ci){
+    public void render(CallbackInfo ci) {
         Mod.render();
     }
 }

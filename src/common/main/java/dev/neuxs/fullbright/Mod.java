@@ -1,7 +1,6 @@
 package dev.neuxs.fullbright;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import dev.neuxs.fullbright.settings.SettingsManager;
 import finalforeach.cosmicreach.GameSingletons;
 import finalforeach.cosmicreach.gamestates.InGame;
@@ -19,6 +18,7 @@ public class Mod {
     public static final String MOD_NAME = "Fullbright";
     public static final String VERSION = "1.0.0";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
+    public static SettingsManager settingsManager;
     public static boolean isFullbrightEnabled = false;
 
     private static ChunkShader customChunkShader = null;
@@ -26,13 +26,13 @@ public class Mod {
 
     public static void init() {
         LOGGER.info("{} v{} Initializing...", MOD_NAME, VERSION);
-        SettingsManager.initialize();
+        settingsManager = SettingsManager.getInstance();
         LOGGER.info("{} v{} Initialized!", MOD_NAME, VERSION);
     }
 
     public static void render() {
-        if (Gdx.input.isKeyJustPressed(SettingsManager.getKeybind())
-                || (isFullbrightEnabled != SettingsManager.isEnabled())) toggleFullbright();
+        if (Gdx.input.isKeyJustPressed(settingsManager.getKeybind())
+                || (isFullbrightEnabled != settingsManager.isEnabled())) toggleFullbright();
     }
 
     public static void toggleFullbright() {
@@ -59,7 +59,7 @@ public class Mod {
             ChunkShader.DEFAULT_BLOCK_SHADER = customChunkShader;
             ChunkShader.WATER_BLOCK_SHADER = customWaterShader;
             reloadChunks();
-            SettingsManager.setEnabled(true);
+            settingsManager.setEnabled(true);
         } catch (Exception e) {
             LOGGER.error("Something went wrong enabling Fullbright: {}", e.getMessage(), e);
             isFullbrightEnabled = false;
@@ -70,7 +70,7 @@ public class Mod {
         try {
             ChunkShader.initChunkShaders();
             reloadChunks();
-            SettingsManager.setEnabled(false);
+            settingsManager.setEnabled(false);
         } catch (Exception e) {
             LOGGER.error("Something went wrong disabling Fullbright: {}", e.getMessage(), e);
         }

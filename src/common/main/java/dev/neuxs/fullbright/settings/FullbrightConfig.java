@@ -7,7 +7,7 @@ public class FullbrightConfig {
     private static final int DEFAULT_KEYBIND = 34;
     private static final boolean DEFAULT_ENABLED = false;
 
-    private int keybind;
+    private final int keybind;
     private boolean enabled;
 
     public FullbrightConfig() {
@@ -25,14 +25,6 @@ public class FullbrightConfig {
 
     public boolean isEnabled() {
         return enabled;
-    }
-
-    public boolean setKeybind(int keybind) {
-        if (this.keybind != keybind) {
-            this.keybind = keybind;
-            return true;
-        }
-        return false;
     }
 
     public boolean setEnabled(boolean enabled) {

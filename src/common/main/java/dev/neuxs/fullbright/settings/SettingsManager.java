@@ -39,11 +39,6 @@ public class SettingsManager {
         return instance;
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static void initialize() {
-        getInstance();
-    }
-
     private FullbrightConfig loadConfigInternal() {
         FullbrightConfig loadedConfig = null;
         boolean needsSave = false;
@@ -131,7 +126,7 @@ public class SettingsManager {
         }
     }
 
-    public static int getKeybind() {
+    public int getKeybind() {
         FullbrightConfig config = getInstance().currentConfig;
         if (config == null) {
             Mod.LOGGER.error("getKeybind called but currentConfig is NULL!");
@@ -140,16 +135,7 @@ public class SettingsManager {
         return config.getKeybind();
     }
 
-    public static void setKeybind(int keybind) {
-        SettingsManager manager = getInstance();
-        if (manager.currentConfig == null) {
-            Mod.LOGGER.error("setKeybind called but currentConfig is NULL! Cannot set keybind.");
-            return;
-        }
-        if (manager.currentConfig.setKeybind(keybind)) saveSettings();
-    }
-
-    public static boolean isEnabled() {
+    public boolean isEnabled() {
         FullbrightConfig config = getInstance().currentConfig;
         if (config == null) {
             Mod.LOGGER.error("isEnabled called but currentConfig is NULL!");
@@ -158,7 +144,7 @@ public class SettingsManager {
         return config.isEnabled();
     }
 
-    public static void setEnabled(boolean enabled) {
+    public void setEnabled(boolean enabled) {
         SettingsManager manager = getInstance();
         if (manager.currentConfig == null) {
             Mod.LOGGER.error("setEnabled called but currentConfig is NULL! Cannot set enabled state.");
@@ -167,7 +153,7 @@ public class SettingsManager {
         if (manager.currentConfig.setEnabled(enabled)) saveSettings();
     }
 
-    public static void saveSettings() {
+    public void saveSettings() {
         getInstance().saveConfigToFile(getInstance().currentConfig);
     }
 
