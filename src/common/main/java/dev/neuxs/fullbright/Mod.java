@@ -3,8 +3,10 @@ package dev.neuxs.fullbright;
 import com.badlogic.gdx.Gdx;
 import dev.neuxs.fullbright.settings.SettingsManager;
 import finalforeach.cosmicreach.GameSingletons;
+import finalforeach.cosmicreach.gamestates.GameState;
 import finalforeach.cosmicreach.gamestates.InGame;
 import finalforeach.cosmicreach.rendering.shaders.ChunkShader;
+import finalforeach.cosmicreach.rendering.shaders.GameShader;
 import finalforeach.cosmicreach.util.Identifier;
 import finalforeach.cosmicreach.world.Chunk;
 import finalforeach.cosmicreach.world.Region;
@@ -20,6 +22,7 @@ public class Mod {
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
     public static SettingsManager settingsManager;
     public static boolean isFullbrightEnabled = false;
+    public static boolean isNoFogEnabled = false;
 
     private static ChunkShader customChunkShader = null;
     private static ChunkShader customWaterShader = null;
@@ -33,35 +36,49 @@ public class Mod {
     public static void render() {
         if (Gdx.input.isKeyJustPressed(settingsManager.getKeybind())
                 || (isFullbrightEnabled != settingsManager.isEnabled())) toggleFullbright();
+        if (isFullbrightEnabled && isNoFogEnabled != settingsManager.isNofog()) {
+            isNoFogEnabled = !isNoFogEnabled;
+            enableFullbright();
+        }
     }
 
     public static void toggleFullbright() {
         isFullbrightEnabled = !isFullbrightEnabled;
+        if (settingsManager.isNofog()) isNoFogEnabled = !isNoFogEnabled;
         if (isFullbrightEnabled) enableFullbright();
         else disableFullbright();
     }
 
     public static void enableFullbright() {
         try {
-            if (customChunkShader == null) {
+            if (isNoFogEnabled) {
                 customChunkShader = new ChunkShader(
-                        Identifier.of(MOD_ID, "shaders/chunk.vert.glsl"),
-                        Identifier.of(MOD_ID, "shaders/chunk.frag.glsl")
+                        Identifier.of(MOD_ID, "shaders/fullbright-nofog/chunk.vert.glsl"),
+                        Identifier.of(MOD_ID, "shaders/fullbright-nofog/chunk.frag.glsl")
                 );
-            }
-            if (customWaterShader == null) {
                 customWaterShader = new ChunkShader(
-                        Identifier.of(MOD_ID, "shaders/chunk-water.vert.glsl"),
-                        Identifier.of(MOD_ID, "shaders/chunk-water.frag.glsl")
+                        Identifier.of(MOD_ID, "shaders/fullbright-nofog/chunk-water.vert.glsl"),
+                        Identifier.of(MOD_ID, "shaders/fullbright-nofog/chunk-water.frag.glsl")
+                );
+            } else {
+                customChunkShader = new ChunkShader(
+                        Identifier.of(MOD_ID, "shaders/fullbright/chunk.vert.glsl"),
+                        Identifier.of(MOD_ID, "shaders/fullbright/chunk.frag.glsl")
+                );
+                customWaterShader = new ChunkShader(
+                        Identifier.of(MOD_ID, "shaders/fullbright/chunk-water.vert.glsl"),
+                        Identifier.of(MOD_ID, "shaders/fullbright/chunk-water.frag.glsl")
                 );
             }
 
             ChunkShader.DEFAULT_BLOCK_SHADER = customChunkShader;
             ChunkShader.WATER_BLOCK_SHADER = customWaterShader;
             reloadChunks();
+            GameShader.reloadAllShaders();
             settingsManager.setEnabled(true);
         } catch (Exception e) {
             LOGGER.error("Something went wrong enabling Fullbright: {}", e.getMessage(), e);
+            settingsManager.setEnabled(false);
             isFullbrightEnabled = false;
         }
     }
@@ -70,7 +87,9 @@ public class Mod {
         try {
             ChunkShader.initChunkShaders();
             reloadChunks();
+            GameShader.reloadAllShaders();
             settingsManager.setEnabled(false);
+            isFullbrightEnabled = false;
         } catch (Exception e) {
             LOGGER.error("Something went wrong disabling Fullbright: {}", e.getMessage(), e);
         }
