@@ -2,6 +2,7 @@ package dev.neuxs.fullbright;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import dev.neuxs.fullbright.settings.SettingsManager;
 import finalforeach.cosmicreach.GameSingletons;
 import finalforeach.cosmicreach.gamestates.InGame;
 import finalforeach.cosmicreach.rendering.shaders.ChunkShader;
@@ -19,18 +20,19 @@ public class Mod {
     public static final String VERSION = "1.0.0";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
     public static boolean isFullbrightEnabled = false;
-    public static boolean isConfigEnabled = false;
 
     private static ChunkShader customChunkShader = null;
     private static ChunkShader customWaterShader = null;
 
     public static void init() {
         LOGGER.info("{} v{} Initializing...", MOD_NAME, VERSION);
+        SettingsManager.initialize();
         LOGGER.info("{} v{} Initialized!", MOD_NAME, VERSION);
     }
 
     public static void render() {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.F) || (!isFullbrightEnabled && isConfigEnabled)) toggleFullbright();
+        if (Gdx.input.isKeyJustPressed(SettingsManager.getKeybind())
+                || (!isFullbrightEnabled && SettingsManager.isEnabled())) toggleFullbright();
     }
 
     public static void toggleFullbright() {
